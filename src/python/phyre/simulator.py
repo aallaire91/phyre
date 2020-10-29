@@ -74,11 +74,23 @@ def simulate_scene(scene: scene_if.Scene,
     scenes = [deserialize(scene_if.Scene(), b) for b in serialized_scenes]
     return scenes
 
+def simulate_scene_noisy(scene: scene_if.Scene,noisy_physics: scene_if.NoisyPhysics,
+                   steps: int = DEFAULT_MAX_STEPS) -> List[scene_if.Scene]:
+    serialized_scenes = simulator_bindings.simulate_scene_noisy(
+        serialize(scene), steps,serialize(noisy_physics))
+    scenes = [deserialize(scene_if.Scene(), b) for b in serialized_scenes]
+    return scenes
 
 def simulate_task(task: task_if.Task,
                   steps: int = DEFAULT_MAX_STEPS,
                   stride: int = DEFAULT_STRIDE) -> task_if.TaskSimulation:
     result = simulator_bindings.simulate_task(serialize(task), steps, stride)
+    return deserialize(task_if.TaskSimulation(), result)
+
+def simulate_task_noisy(task: task_if.Task,noisy_physics: scene_if.NoisyPhysics,
+                  steps: int = DEFAULT_MAX_STEPS,
+                  stride: int = DEFAULT_STRIDE) -> task_if.TaskSimulation:
+    result = simulator_bindings.simulate_task_noisy(serialize(task), steps, stride,serialize(noisy_physics) )
     return deserialize(task_if.TaskSimulation(), result)
 
 

@@ -14,21 +14,158 @@
 #include "task_utils.h"
 #include "task_validation.h"
 #include "thrift_box2d_conversion.h"
-
+#include <random>
 #include <iostream>
 
 namespace {
+    std::default_random_engine generator;
+
 struct SimulationRequest {
   int maxSteps;
   int stride;
 };
 
+double sample_gaussian(double mean,double std) {
+    std::normal_distribution<double> distribution(mean,std);
+    return distribution(generator);
+}
+
+double truncate(double x,double min,double max) {
+    if (x<min) {
+        x = min;
+    } else if (x > max) {
+        x = max;
+    }
+    return x;
+}
+
+::task::TaskSimulation simulateTaskNoisy(const ::scene::Scene &scene,
+                                               const SimulationRequest &request,
+                                               const ::task::Task *task,
+                                               const ::scene::NoisyPhysics noisy_physics) {
+
+    ::scene::Physics physics;
+    if (noisy_physics.noise_friction>0) {
+        physics.friction = truncate(sample_gaussian(DEFAULT_FRICTION,noisy_physics.noise_friction),0.0,1.0);
+    } else {
+        physics.friction = DEFAULT_FRICTION;
+    }
+    if (noisy_physics.noise_restitution>0) {
+        physics.restitution = truncate(sample_gaussian(DEFAULT_RESTITUTION,noisy_physics.noise_restitution),0.0,1.0);
+    } else {
+        physics.restitution = DEFAULT_RESTITUTION;
+    }
+    if (noisy_physics.noise_density>0) {
+        physics.density = truncate(sample_gaussian(DEFAULT_DENSITY,noisy_physics.noise_density),0.0,10.0);
+    } else {
+        physics.density = DEFAULT_DENSITY;
+    }
+    if (noisy_physics.noise_gravity>0) {
+        physics.gravity = truncate(sample_gaussian(DEFAULT_GRAVITY,noisy_physics.noise_gravity),-20,0.0);
+    } else {
+        physics.gravity = DEFAULT_GRAVITY;
+    }
+    if (noisy_physics.noise_damping>0) {
+        physics.angularDamping=  truncate(sample_gaussian(DEFAULT_GRAVITY,noisy_physics.noise_damping),0.0,0.1);
+        physics.linearDamping= truncate(sample_gaussian(DEFAULT_GRAVITY,noisy_physics.noise_damping),0.0,0.1);
+    } else {
+        physics.angularDamping=  DEFAULT_ANGULAR_DAMPING;
+        physics.linearDamping= DEFAULT_LINEAR_DAMPING;
+    }
+
+    std::unique_ptr<b2WorldWithData> world = convertSceneToBox2dWorld(scene,physics);
+
+    if (noisy_physics.noise_contact_dir) {
+// TODO
+    }
+
+    if (noisy_physics.noise_contact_mag) {
+// TODO
+    }
+    unsigned int continuousSolvedCount = 0;
+    std::vector<::scene::Scene> scenes;
+    std::vector<bool> solveStateList;
+    bool solved = false;
+    int step = 0;
+
+    // For different relations number of steps the condition should hold varies.
+    // For NOT_TOUCHING relation one of three should be true:
+    //   1. Objects are touching at the beginning and then not touching for
+    //   kStepsForSolution steps.
+    //   2. Objects are not touching at the beginning, touching at some point of
+    //   simulation and then not touching for kStepsForSolution steps.
+    //   3. Objects are not touching whole sumulation.
+    // For TOUCHING_BRIEFLY a single touching is allowed.
+    // For all other relations the condition must hold for kStepsForSolution
+    // consequent steps.
+    bool lookingForSolution =
+        (task == nullptr || !isTaskInSolvedState(*task, *world) ||
+            task->relationships.size() != 1 ||
+            task->relationships[0] != ::task::SpatialRelationship::NOT_TOUCHING);
+    const bool allowInstantSolution =
+        (task != nullptr && task->relationships.size() == 1 &&
+            task->relationships[0] == ::task::SpatialRelationship::TOUCHING_BRIEFLY);
+    for (; step < request.maxSteps; step++) {
+        // Instruct the world to perform a single step of simulation.
+        // It is generally best to keep the time step and iterations fixed.
+
+        world->Step(kTimeStep, kVelocityIterations, kPositionIterations);
+
+        if (request.stride > 0 && step % request.stride == 0) {
+            scenes.push_back(updateSceneFromWorld(scene, *world));
+        }
+        if (task == nullptr) {
+            solveStateList.push_back(false);
+        } else {
+            solveStateList.push_back(isTaskInSolvedState(*task, *world));
+            if (solveStateList.back()) {
+                continuousSolvedCount++;
+                if (lookingForSolution) {
+                    if (continuousSolvedCount >= kStepsForSolution ||
+                        allowInstantSolution) {
+                        solved = true;
+                        break;
+                    }
+                }
+            } else {
+                lookingForSolution = true;  // Task passed through non-solved state.
+                continuousSolvedCount = 0;
+            }
+        }
+    }
+
+    if (!lookingForSolution && continuousSolvedCount == solveStateList.size()) {
+        // See condition 3) for NOT_TOUCHING relation above.
+        solved = true;
+    }
+
+    {
+        std::vector<bool> stridedSolveStateList;
+        if (request.stride > 0) {
+            for (size_t i = 0; i < solveStateList.size(); i += request.stride) {
+                stridedSolveStateList.push_back(solveStateList[i]);
+            }
+        }
+        stridedSolveStateList.swap(solveStateList);
+    }
+
+    ::task::TaskSimulation taskSimulation;
+    taskSimulation.__set_sceneList(scenes);
+    taskSimulation.__set_stepsSimulated(step);
+    if (task != nullptr) {
+        taskSimulation.__set_solvedStateList(solveStateList);
+        taskSimulation.__set_isSolution(solved);
+    }
+
+    return taskSimulation;
+}
 // Runs simulation for the scene. If task is not nullptr, is-task-solved checks
 // are performed.
 ::task::TaskSimulation simulateTask(const ::scene::Scene &scene,
                                     const SimulationRequest &request,
                                     const ::task::Task *task) {
-  std::unique_ptr<b2WorldWithData> world = convertSceneToBox2dWorld(scene);
+
+  std::unique_ptr<b2WorldWithData> world = convertSceneToBox2dWorld(scene,default_physics());
 
   unsigned int continuousSolvedCount = 0;
   std::vector<::scene::Scene> scenes;
@@ -107,6 +244,13 @@ struct SimulationRequest {
 }
 }  // namespace
 
+std::vector<::scene::Scene> simulateSceneNoisy(const ::scene::Scene &scene,
+                                          const int num_steps, const ::scene::NoisyPhysics noisy_physics) {
+    const SimulationRequest request{num_steps, 1};
+    const auto simulation = simulateTaskNoisy(scene, request, /*task=*/nullptr,noisy_physics);
+    return simulation.sceneList;
+}
+
 std::vector<::scene::Scene> simulateScene(const ::scene::Scene &scene,
                                           const int num_steps) {
   const SimulationRequest request{num_steps, 1};
@@ -118,4 +262,10 @@ std::vector<::scene::Scene> simulateScene(const ::scene::Scene &scene,
                                     const int num_steps, const int stride) {
   const SimulationRequest request{num_steps, stride};
   return simulateTask(task.scene, request, &task);
+}
+
+::task::TaskSimulation simulateTaskNoisy(const ::task::Task &task,
+                                    const int num_steps, const int stride, const ::scene::NoisyPhysics noisy_physics) {
+    const SimulationRequest request{num_steps, stride};
+    return simulateTaskNoisy(task.scene, request, &task,noisy_physics);
 }

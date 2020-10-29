@@ -37,6 +37,7 @@ using ::scene::UserInput;
 using ::scene::UserInputStatus;
 using ::task::Task;
 using ::task::TaskSimulation;
+using ::scene::NoisyPhysics;
 namespace py = pybind11;
 
 namespace {
@@ -226,6 +227,19 @@ PYBIND11_MODULE(simulator_bindings, m) {
       },
       "Get per-frame results of scene simulation");
 
+    m.def(
+    "simulate_scene_noisy",
+    [](const std::vector<unsigned char> &scene, int steps,std::vector<unsigned char> noisy_physics) {
+    const std::vector<Scene> scenes =
+        simulateSceneNoisy(deserialize<Scene>(scene), steps,deserialize<NoisyPhysics>(noisy_physics));
+    std::vector<py::bytes> serializedScenes(scenes.size());
+    for (size_t i = 0; i < scenes.size(); ++i) {
+    serializedScenes[i] = serialize(scenes[i]);
+    }
+    return serializedScenes;
+    },
+    "Get per-frame results of scene simulation");
+
   m.def(
       "add_user_input_to_scene",
       [](const std::vector<unsigned char> &scene_serialized,
@@ -276,6 +290,15 @@ PYBIND11_MODULE(simulator_bindings, m) {
         return serialize(results);
       },
       "Produce TaskSimulation");
+
+m.def(
+"simulate_task_noisy",
+[](const std::vector<unsigned char> &task, int steps, int stride,std::vector<unsigned char> noisy_physics) {
+const TaskSimulation results =
+    simulateTaskNoisy(deserialize<Task>(task), steps, stride,deserialize<NoisyPhysics>(noisy_physics));
+return serialize(results);
+},
+"Produce TaskSimulation");
 
   m.def(
       "magic_ponies",

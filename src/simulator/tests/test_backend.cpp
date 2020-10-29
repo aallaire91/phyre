@@ -84,8 +84,10 @@ class BackendTest : public ::testing::Test {
 };
 
 TEST_F(BackendTest, DISABLED_ThriftToBox2dConversion) {
+
+
   std::unique_ptr<b2WorldWithData> box2dWorld =
-      convertSceneToBox2dWorld(scene_);
+      convertSceneToBox2dWorld(scene_,default_physics());
 
   // As thrift uses double and box2d uses float, so can't use == to compare
   EXPECT_FLOAT_EQ(box2dWorld->GetGravity().x, GRAVITY_X);
@@ -130,7 +132,7 @@ TEST_F(BackendTest, DISABLED_ThriftToBox2dConversion) {
 }
 
 TEST_F(BackendTest, SceneToBox2DAndBackConversion) {
-  auto box2dWorld = convertSceneToBox2dWorld(scene_);
+  auto box2dWorld = convertSceneToBox2dWorld(scene_,default_physics());
   const scene::Scene scene = updateSceneFromWorld(scene_, *box2dWorld);
   EXPECT_FLOAT_EQ(scene.width, WORLD_WIDTH);
   EXPECT_FLOAT_EQ(scene.height, WORLD_HEIGHT);
@@ -157,7 +159,7 @@ TEST_F(BackendTest, SceneToBox2DAndBackConversion) {
 }
 
 TEST_F(BackendTest, SceneSimulationDoesntDie) {
-  std::unique_ptr<b2WorldWithData> world = convertSceneToBox2dWorld(scene_);
+  std::unique_ptr<b2WorldWithData> world = convertSceneToBox2dWorld(scene_,default_physics());
   float32 timeStep = 1.0f / 60.0f;
   int32 velocityIterations = 10;
   int32 positionIterations = 10;
