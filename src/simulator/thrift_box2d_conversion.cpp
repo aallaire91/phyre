@@ -131,6 +131,7 @@ void addBodiesToWorld(b2WorldWithData& world,
     physics.friction = DEFAULT_FRICTION;
     physics.angularDamping = DEFAULT_ANGULAR_DAMPING;
     physics.linearDamping = DEFAULT_LINEAR_DAMPING;
+    return physics;
 }
 
 std::unique_ptr<b2WorldWithData> convertSceneToBox2dWorld(

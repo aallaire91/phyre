@@ -115,13 +115,14 @@ struct Image {
 }
 
 struct Physics {
-  6: double friction,
-  7: double restitution,
-  8: double density,
-  9: double angularDamping,
-  10:double linearDamping,
-  11: double gravity,
+  6: double friction =  0.5 ,
+  7: double restitution = 0.2,
+  8: double density = 0.25,
+  9: double angularDamping = 0.01,
+  10:double linearDamping =  0.0,
+  11: double gravity = -9.8,
 }
+
 struct NoisyPhysics {
    1: double noise_friction = 0.0,
    2: double noise_restitution  = 0.0,
@@ -130,4 +131,11 @@ struct NoisyPhysics {
    5: double noise_gravity  = 0.0,
    6: double noise_contact_mag  = 0.0,
    7: double noise_contact_dir  = 0.0,
+  8: double friction = 0.5 ,
+  9: double restitution = 0.2,
+  10: double density = 0.25,
+  11: double angularDamping = 0.01,
+  12:double linearDamping = 0.0,
+  13: double gravity = -9.8,
 }
+

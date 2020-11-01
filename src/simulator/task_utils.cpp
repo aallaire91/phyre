@@ -46,28 +46,28 @@ double truncate(double x,double min,double max) {
 
     ::scene::Physics physics;
     if (noisy_physics.noise_friction>0) {
-        physics.friction = truncate(sample_gaussian(DEFAULT_FRICTION,noisy_physics.noise_friction),0.0,1.0);
+        physics.friction = truncate(sample_gaussian(noisy_physics.friction,noisy_physics.noise_friction),0.0,1.0);
     } else {
         physics.friction = DEFAULT_FRICTION;
     }
     if (noisy_physics.noise_restitution>0) {
-        physics.restitution = truncate(sample_gaussian(DEFAULT_RESTITUTION,noisy_physics.noise_restitution),0.0,1.0);
+        physics.restitution = truncate(sample_gaussian(noisy_physics.restitution,noisy_physics.noise_restitution),0.0,1.0);
     } else {
         physics.restitution = DEFAULT_RESTITUTION;
     }
     if (noisy_physics.noise_density>0) {
-        physics.density = truncate(sample_gaussian(DEFAULT_DENSITY,noisy_physics.noise_density),0.0,10.0);
+        physics.density = truncate(sample_gaussian(noisy_physics.density,noisy_physics.noise_density),0.0,10.0);
     } else {
         physics.density = DEFAULT_DENSITY;
     }
     if (noisy_physics.noise_gravity>0) {
-        physics.gravity = truncate(sample_gaussian(DEFAULT_GRAVITY,noisy_physics.noise_gravity),-20,0.0);
+        physics.gravity = truncate(sample_gaussian(noisy_physics.gravity,noisy_physics.noise_gravity),-20,0.0);
     } else {
         physics.gravity = DEFAULT_GRAVITY;
     }
     if (noisy_physics.noise_damping>0) {
-        physics.angularDamping=  truncate(sample_gaussian(DEFAULT_GRAVITY,noisy_physics.noise_damping),0.0,0.1);
-        physics.linearDamping= truncate(sample_gaussian(DEFAULT_GRAVITY,noisy_physics.noise_damping),0.0,0.1);
+        physics.angularDamping=  truncate(sample_gaussian(noisy_physics.angularDamping,noisy_physics.noise_damping),0.0,0.1);
+        physics.linearDamping= truncate(sample_gaussian(noisy_physics.linearDamping,noisy_physics.noise_damping),0.0,0.1);
     } else {
         physics.angularDamping=  DEFAULT_ANGULAR_DAMPING;
         physics.linearDamping= DEFAULT_LINEAR_DAMPING;
