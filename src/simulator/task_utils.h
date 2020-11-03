@@ -36,17 +36,15 @@ constexpr unsigned kMaxSteps = 1000;
 
 // Runs simulation for num_steps and returns every scene.
 std::vector<::scene::Scene> simulateScene(const ::scene::Scene& scene,
-                                          const int num_steps);
-std::vector<::scene::Scene> simulateSceneNoisy(const ::scene::Scene& scene,
-                                          const int num_steps,::scene::NoisyPhysics noisy_physics);
+                                          const int num_steps,::scene::NoisyPhysics noisy_physics=::scene::NoisyPhysics());
+
 // Runs simulation for at most num_steps. The sumlation is stopped earlier if
 // the task is in the solved state for at least kStepsForSolution steps.
 // Returns every stride scene starting from the first one. Note, for big enough
 // stride there is no guarantee that the last sscene in the solved state.
 ::task::TaskSimulation simulateTask(const ::task::Task& task,
-                                    const int num_steps, const int stride = 1);
-::task::TaskSimulation simulateTaskNoisy(const ::task::Task& task,
-                                    const int num_steps, const int stride,::scene::NoisyPhysics noisy_physics);
+                                    const int num_steps, const int stride = 1,::scene::NoisyPhysics noisy_physics=::scene::NoisyPhysics());
+
 // Run simulation in parallel using worker pool of num_workers processes.
 std::vector<::task::TaskSimulation> simulateTasksInParallel(
     const std::vector<::task::Task>& tasks, const int num_workers,

@@ -68,29 +68,19 @@ def build_user_input(points=None, rectangulars=None, balls=None):
 
 
 def simulate_scene(scene: scene_if.Scene,
-                   steps: int = DEFAULT_MAX_STEPS) -> List[scene_if.Scene]:
+                   steps: int = DEFAULT_MAX_STEPS,
+                   noisy_physics: scene_if.NoisyPhysics = scene_if.NoisyPhysics()) -> List[scene_if.Scene]:
     serialized_scenes = simulator_bindings.simulate_scene(
-        serialize(scene), steps)
-    scenes = [deserialize(scene_if.Scene(), b) for b in serialized_scenes]
-    return scenes
-
-def simulate_scene_noisy(scene: scene_if.Scene,noisy_physics: scene_if.NoisyPhysics,
-                   steps: int = DEFAULT_MAX_STEPS) -> List[scene_if.Scene]:
-    serialized_scenes = simulator_bindings.simulate_scene_noisy(
         serialize(scene), steps,serialize(noisy_physics))
     scenes = [deserialize(scene_if.Scene(), b) for b in serialized_scenes]
     return scenes
 
+
 def simulate_task(task: task_if.Task,
                   steps: int = DEFAULT_MAX_STEPS,
-                  stride: int = DEFAULT_STRIDE) -> task_if.TaskSimulation:
-    result = simulator_bindings.simulate_task(serialize(task), steps, stride)
-    return deserialize(task_if.TaskSimulation(), result)
-
-def simulate_task_noisy(task: task_if.Task,noisy_physics: scene_if.NoisyPhysics,
-                  steps: int = DEFAULT_MAX_STEPS,
-                  stride: int = DEFAULT_STRIDE) -> task_if.TaskSimulation:
-    result = simulator_bindings.simulate_task_noisy(serialize(task), steps, stride,serialize(noisy_physics) )
+                  stride: int = DEFAULT_STRIDE,
+                  noisy_physics: scene_if.NoisyPhysics = scene_if.NoisyPhysics()) -> task_if.TaskSimulation:
+    result = simulator_bindings.simulate_task(serialize(task), steps, stride, serialize(noisy_physics))
     return deserialize(task_if.TaskSimulation(), result)
 
 
@@ -137,7 +127,8 @@ def simulate_task_with_input(task,
                              user_input,
                              steps=DEFAULT_MAX_STEPS,
                              stride=DEFAULT_STRIDE,
-                             keep_space_around_bodies=True):
+                             keep_space_around_bodies=True,
+                             noisy_physics=scene_if.NoisyPhysics()):
     """Check a solution for a task and return SimulationResult.
 
     This is un-optimized version of magic_ponies that should be used for
@@ -150,7 +141,7 @@ def simulate_task_with_input(task,
     task = copy.copy(task)
     task.scene = add_user_input_to_scene(task.scene, user_input,
                                          keep_space_around_bodies)
-    return simulate_task(task, steps, stride)
+    return simulate_task(task, steps, stride,noisy_physics)
 
 
 def scene_to_raster(scene: scene_if.Scene) -> np.ndarray:
@@ -208,7 +199,8 @@ def magic_ponies(task,
                  keep_space_around_bodies=True,
                  with_times=False,
                  need_images=False,
-                 need_featurized_objects=False):
+                 need_featurized_objects=False,
+                 noisy_physics=scene_if.NoisyPhysics()):
     """Check a solution for a task and return intermidiate images.
 
     Args:
@@ -255,7 +247,8 @@ def magic_ponies(task,
                                                     serialize(user_input),
                                                     keep_space_around_bodies,
                                                     steps, stride, need_images,
-                                                    need_featurized_objects))
+                                                    need_featurized_objects,
+                                                    serialize(noisy_physics)))
     else:
         points, rectangulars, balls = _prepare_user_input(*user_input)
         is_solved, had_occlusions, packed_images, packed_featurized_objects, number_objects, sim_time, pack_time = (
@@ -263,7 +256,8 @@ def magic_ponies(task,
                                             rectangulars, balls,
                                             keep_space_around_bodies, steps,
                                             stride, need_images,
-                                            need_featurized_objects))
+                                            need_featurized_objects,
+                                            serialize(noisy_physics)))
 
     packed_images = np.array(packed_images, dtype=np.uint8)
 
@@ -293,7 +287,8 @@ def batched_magic_ponies(tasks,
                          keep_space_around_bodies=True,
                          with_times=False,
                          need_images=False,
-                         need_featurized_objects=False):
+                         need_featurized_objects=False,
+                         noisy_physics=scene_if.NoisyPhysics()):
     del num_workers  # Not used.
     return tuple(
         zip(*[
@@ -304,6 +299,7 @@ def batched_magic_ponies(tasks,
                          keep_space_around_bodies=keep_space_around_bodies,
                          with_times=with_times,
                          need_images=need_images,
-                         need_featurized_objects=need_featurized_objects)
+                         need_featurized_objects=need_featurized_objects,
+                         noisy_physics=noisy_physics)
             for t, ui in zip(tasks, user_inputs)
         ]))

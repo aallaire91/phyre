@@ -163,7 +163,7 @@ class ActionSimulator():
 
     def _simulate_user_input(
             self, task_index, user_input, need_images, need_featurized_objects,
-            stride) -> Tuple[SimulationStatus, MaybeImages, MaybeObjects]:
+            stride,noisy_physics) -> Tuple[SimulationStatus, MaybeImages, MaybeObjects]:
         serialzed_task = self._serialized[task_index]
         # FIXME: merge this into single call to simulator.
         if not self._action_mapper.OCCLUSIONS_ALLOWED:
@@ -181,7 +181,8 @@ class ActionSimulator():
             stride=stride,
             keep_space_around_bodies=self._keep_spaces,
             need_images=need_images,
-            need_featurized_objects=need_featurized_objects)
+            need_featurized_objects=need_featurized_objects,
+            noisy_physics=noisy_physics)
         if not need_images:
             images = None
         if not need_featurized_objects:
@@ -203,7 +204,8 @@ class ActionSimulator():
                         action: ActionLike,
                         need_images: bool = True,
                         stride: int = phyre.simulator.DEFAULT_STRIDE,
-                        stable: bool = False
+                        stable: bool = False,
+                        noisy_physics:scene_if.NoisyPhysics=scene_if.NoisyPhysics()
                        ) -> Tuple[SimulationStatus, MaybeImages]:
         """Deprecated in version 0.2.0 in favor of simulate_action.
         Runs simluation for the action.
@@ -234,7 +236,7 @@ class ActionSimulator():
                                           need_images=need_images,
                                           need_featurized_objects=False,
                                           stride=stride,
-                                          stable=stable)
+                                          stable=stable,noisy_physics=noisy_physics)
         return simulation.status, simulation.images
 
     def simulate_action(self,
@@ -244,7 +246,8 @@ class ActionSimulator():
                         need_images: bool = True,
                         need_featurized_objects: bool = False,
                         stride: int = phyre.simulator.DEFAULT_STRIDE,
-                        stable: bool = False) -> phyre.simulation.Simulation:
+                        stable: bool = False,
+                        noisy_physics:scene_if.NoisyPhysics=scene_if.NoisyPhysics()) -> phyre.simulation.Simulation:
         """Runs simluation for the action.
 
         Args:
@@ -277,7 +280,7 @@ class ActionSimulator():
 
         main_status, images, objects = self._simulate_user_input(
             task_index, user_input, need_images, need_featurized_objects,
-            stride)
+            stride,noisy_physics)
         if not stable or not main_status.is_solved():
             return phyre.simulation.Simulation(status=main_status,
                                                images=images,
@@ -289,7 +292,7 @@ class ActionSimulator():
                 modified_user_input,
                 need_images=False,
                 need_featurized_objects=False,
-                stride=stride)
+                stride=stride,noisy_physics=noisy_physics)
             if status.is_not_solved():
                 return phyre.simulation.Simulation(
                     status=SimulationStatus.UNSTABLY_SOLVED,
