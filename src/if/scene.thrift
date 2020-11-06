@@ -61,15 +61,17 @@ struct Body {
   2: required BodyType bodyType,
   // Angle relative to position in radians.
   3: optional double angle = 0.0,
-  4: optional list<Shape> shapes,
-  5: optional shared.Color color,
-  6: optional ShapeType shapeType = SHAPE_TYPE.UNDEFINED,
-  7: optional double diameter
+  4: optional Vector linVelocity,
+  5: optional double angVelocity = 0.0,
+  6: optional list<Shape> shapes,
+  7: optional shared.Color color,
+  8: optional ShapeType shapeType = SHAPE_TYPE.UNDEFINED,
+  9: optional double diameter
 
 }
 
 
-// Convex polygon with absolutely positions vecrticies.
+// Convex polygon with absolutely positions vertices.
 struct AbsoluteConvexPolygon {
   1: optional list<Vector> vertices,
 }

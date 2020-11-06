@@ -91,10 +91,16 @@ def _object_features_to_values(features):
     x = featurized_objects.xs.item()
     y = featurized_objects.ys.item()
     angle = featurized_objects.angles.item()
+    v_x = featurized_objects.v_xs.item()
+    v_y = featurized_objects.v_ys.item()
+    v_angle = featurized_objects.v_angles.item()
     diameter = featurized_objects.diameters.item()
     x *= constants.SCENE_WIDTH
     y *= constants.SCENE_HEIGHT
     angle *= 360.
+    v_x *= constants.SCENE_WIDTH
+    v_y *= constants.SCENE_HEIGHT
+    v_angle *= 360.
     diameter *= constants.SCENE_WIDTH
 
     shape_type = featurized_objects.shapes[0].lower()
@@ -104,6 +110,9 @@ def _object_features_to_values(features):
     return dict(x=x,
                 y=y,
                 angle=angle,
+                v_x=v_x,
+                v_y=v_y,
+                v_angle=v_angle,
                 diameter=diameter,
                 dynamic=dynamic,
                 user_input=user_input,

@@ -74,7 +74,7 @@ double truncate(double x,double min,double max) {
         physics.linearDamping= DEFAULT_LINEAR_DAMPING;
     }
 
-  std::unique_ptr<b2WorldWithData> world = convertSceneToBox2dWorld(scene,physics);
+  std::unique_ptr<b2WorldWithData> world = convertSceneToBox2dWorld_with_bounding_boxes(scene,physics);
 
   unsigned int continuousSolvedCount = 0;
   std::vector<::scene::Scene> scenes;

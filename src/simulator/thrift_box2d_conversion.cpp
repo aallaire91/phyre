@@ -71,6 +71,8 @@ b2BodyDef convertThriftBodyToBox2dBodyDef(const ::scene::Body& pThriftBody, ::sc
   bodyDef.position.Set(p2m(pThriftBody.position.x),
                        p2m(pThriftBody.position.y));
   bodyDef.angle = pThriftBody.angle;
+  bodyDef.linearVelocity.Set(p2m(pThriftBody.linVelocity.x),p2m(pThriftBody.linVelocity.y));
+  bodyDef.angularVelocity = pThriftBody.angVelocity;
   bodyDef.angularDamping = physics.angularDamping;
   bodyDef.linearDamping = physics.linearDamping;
 
@@ -118,6 +120,10 @@ void addBodiesToWorld(b2WorldWithData& world,
   ::scene::Body body;
   body.__set_shapes({shape});
   body.__set_position(bodyPos);
+  ::scene::Vector bodyVel;
+  bodyVel.x = 0.0;
+  bodyVel.y = 0.0;
+  body.__set_linVelocity(bodyVel);
   return body;
 }
 
@@ -180,6 +186,9 @@ std::unique_ptr<b2WorldWithData> convertSceneToBox2dWorld_with_bounding_boxes(
     body.position.__set_x(m2p(box2dBody->GetPosition().x));
     body.position.__set_y(m2p(box2dBody->GetPosition().y));
     body.__set_angle(box2dBody->GetAngle());
+    body.linVelocity.__set_x(m2p(box2dBody->GetLinearVelocity().x));
+    body.linVelocity.__set_y(m2p(box2dBody->GetLinearVelocity().y));
+    body.__set_angVelocity(box2dBody->GetAngularVelocity());
   }
   return new_scene;
 }

@@ -23,6 +23,7 @@ import phyre.interface.scene.ttypes as scene_if
 import phyre.interface.shared.constants as shared_constants
 import phyre.interface.shared.ttypes as shared_if
 from phyre.creator import constants
+from phyre import simulator_bindings
 
 DIAMETER_CENTERS = {}
 
@@ -130,39 +131,48 @@ class FeaturizedObjects():
             - 0: x in pixels of center of mass divided by SCENE_WIDTH
             - 1: y in pixels of center of mass divided by SCENE_HEIGHT
             - 2: angle of the object between 0 and 2pi divided by 2pi
-            - 3: diameter in pixels of object divided by SCENE_WIDTH
-            - 4-8: One hot encoding of the object shape, according to order:
+            - 3: x velocity in pixels/s of center of mass divided by SCENE_WIDTH
+            - 4: y velocity in pixels/s of center of mass divided by SCENE_WIDTH
+            - 5: angular velocity of the object in rad/s divided by 2pi
+            - 6: diameter in pixels of object divided by SCENE_WIDTH
+            - 7-10: One hot encoding of the object shape, according to order:
                 ball, bar, jar, standing sticks
-            - 8-14: One hot encoding of object color, according to order:
+            - 11-16: One hot encoding of object color, according to order:
                 red, green, blue, purple, gray, black
     :ivar shapes: List(str) of length number of objects of the
         shape types of the objects in order. Values are members of scene_if.ShapeType
     :ivar shapes_one_hot: np.array of size (T, N, 4) corresponding to one hot
-        encoding of shapes. Features 4-8
+        encoding of shapes. Features 7-10
         shape types of the objects in order. Values are members of scene_if.ShapeType
     :ivar colors: List(str) of length number of objects of the colors of the
         objects in order. Values are members of shared_if.Colors
     :ivar shapes_one_hot: np.array of size (T, N, 6) corresponding to one hot
-        encoding of colors. Features 8-14
+        encoding of colors. Features 11-16
     :ivar diameters: np.ndarray of dtype=float of shape(num objects, ) containing
         the object diameter in pixels divided by SCENE_WIDTH in order
-    :ivar states: np.array of size (T, N, 3) where T is the number of timesteps,
-        N is the number of objects and the remaining 3 features are:
+    :ivar states: np.array of size (T, N, 6) where T is the number of timesteps,
+        N is the number of objects and the remaining 6 features are:
             - 0: x in pixels of center of mass divided by SCENE_WIDTH
             - 1: y in pixels of center of mass divided by SCENE_HEIGHT
             - 2: angle of the object in [0, 2pi]  divided by 2pi
+            - 3: x velocity in pixels/s of center of mass divided by SCENE_WIDTH
+            - 4: y velocity in pixels/s of center of mass divided by SCENE_WIDTH
+            - 5: angular velocity of the object in rad/s divided by 2pi
     :ivar num_user_inputs: (int) Number of user input objects in the simulation
     :ivar num_objects: (int) Number of objects in the simulation_states
     :ivar num_scene_obejcts: (int) Number of scene objects in the simulation.
     """
-    _NUM_FEATURES = 14
+    _NUM_FEATURES = simulator_bindings.OBJECT_FEATURE_SIZE
 
     _X_INDEX = 0
     _Y_INDEX = 1
     _ANGLE_INDEX = 2
-    _DIAMETER_INDEX = 3
-    _SHAPE_START_INDEX = 4
-    _SHAPE_END_INDEX = 8
+    _V_X_INDEX = 3
+    _V_Y_INDEX = 4
+    _V_ANGLE_INDEX = 5
+    _DIAMETER_INDEX = 6
+    _SHAPE_START_INDEX = 7
+    _SHAPE_END_INDEX = 11
     _COLOR_START_INDEX = _SHAPE_END_INDEX
     _COLOR_END_INDEX = _NUM_FEATURES
 
@@ -181,6 +191,9 @@ class FeaturizedObjects():
         self.xs = featurized_objects[:, :, self._X_INDEX]
         self.ys = featurized_objects[:, :, self._Y_INDEX]
         self.angles = featurized_objects[:, :, self._ANGLE_INDEX]
+        self.v_xs = featurized_objects[:, :, self._V_X_INDEX]
+        self.v_ys = featurized_objects[:, :, self._V_Y_INDEX]
+        self.v_angles = featurized_objects[:, :, self._V_ANGLE_INDEX]
         self.diameters = featurized_objects[0, :, self._DIAMETER_INDEX]
         self.shapes_one_hot = featurized_objects[0, :, self._SHAPE_START_INDEX:
                                                  self._SHAPE_END_INDEX]

@@ -424,10 +424,13 @@ float wrapAngleRadians(float angle) {
 
 void featurizeBody(const Body& body, int sceneHeight, int sceneWidth,
                    float* buffer) {
-  static_assert(kObjectFeatureSize == 14);
+  static_assert(kObjectFeatureSize == 17);
   *buffer++ = static_cast<float>(body.position.x) / sceneWidth;
   *buffer++ = static_cast<float>(body.position.y) / sceneHeight;
   *buffer++ = wrapAngleRadians(body.angle) / (2. * M_PI);
+  *buffer++ =static_cast<float>(body.linVelocity.x)/sceneWidth;
+  *buffer++ = static_cast<float>(body.linVelocity.y) / sceneHeight;
+  *buffer++ = static_cast<float>(body.angVelocity) / (2.0*M_PI);
   *buffer++ = static_cast<float>(body.diameter) / sceneWidth;
   // One hot encode the shapeTyoe and color
   for (int i = 0; i < kNumShapes; ++i) {

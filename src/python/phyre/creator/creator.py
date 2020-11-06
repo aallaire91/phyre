@@ -56,18 +56,18 @@ class TaskCreator(object):
             height = thickness
             width = constants.SCENE_WIDTH
 
-        body = self.add_box(dynamic=False, height=height, width=width)
+        body = self.add_bar(dynamic=False, height=height, width=width)
         body.set_color(
             _role_to_color_name('STATIC')).set_object_type(f'{side}-wall')
 
         if side == 'bottom':
-            body.set_left(0).set_top(0)
+            body.set_left(0).set_top((thickness/2.0))
         elif side == 'left':
-            body.set_right(0).set_bottom(0)
+            body.set_right((thickness/2.0)).set_bottom(0)
         elif side == 'top':
-            body.set_left(0).set_bottom(self.scene.height)
+            body.set_left(0).set_bottom(self.scene.height-(thickness/2.0))
         elif side == 'right':
-            body.set_left(self.scene.width).set_bottom(0)
+            body.set_left(self.scene.width-(thickness/2.0)).set_bottom(0)
         else:
             raise ValueError('Unknown wall side: %s' % side)
         return body
@@ -177,6 +177,13 @@ class TaskCreator(object):
                                            'bar',
                                            dynamic,
                                            scale=scale)
+
+    def add_bar(self, width, height, dynamic=False):
+        return self._add_body_from_builder(shapes_lib.Bar,
+                                           'bar',
+                                           dynamic,
+                                           width=width,
+                                           height=height)
 
     def add_box(self, width, height, dynamic=True):
         return self._add_body_from_builder(shapes_lib.Box,
@@ -340,6 +347,8 @@ class Body(object):
         body = scene_if.Body(
             position=scene_if.Vector(x, y),
             angle=0.,
+            linVelocity=scene_if.Vector(0.0,0.0),
+            angVelocity=0.0,
             shapes=shapes,
         )
         assert dynamic in [True, False]

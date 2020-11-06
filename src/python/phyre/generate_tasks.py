@@ -34,7 +34,8 @@ def _save_task(task_id, thrift_task, target_folder):
     return task_id
 
 
-def main(src_folder, target_folder, save_single_pickle, with_eval_stats):
+def main(src_folder=str(
+    phyre.settings.TASK_SCRIPTS_DIR), target_folder=phyre.settings.TASK_DIR, save_single_pickle=True, with_eval_stats=False):
     if not os.path.exists(target_folder):
         os.makedirs(target_folder)
     if with_eval_stats:
@@ -68,13 +69,13 @@ def main(src_folder, target_folder, save_single_pickle, with_eval_stats):
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('src_folder', help='Folder with "taskXXX.py" files')
-    parser.add_argument('target_folder')
+    # parser.add_argument('--s','src_folder',default=str(phyre.settings.TASK_SCRIPTS_DIR), help='Folder with "taskXXX.py" files')
+    # parser.add_argument('--t','target_folder',default=str(phyre.settings.TASK_DIR))
     parser.add_argument(
-        '--save-single-pickle',
+        '--save-single-pickle',default=True,
         action='store_true',
         help='If set, tasks will be grouped by tiers and pickled')
-    parser.add_argument('--with-eval-stats',
+    parser.add_argument('--with-eval-stats', default=False,
                         action='store_true',
                         help='Use eval stats when possible')
     main(**vars(parser.parse_args()))
