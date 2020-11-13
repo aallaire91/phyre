@@ -24,8 +24,8 @@ from phyre.creator import shapes as shapes_lib
 from phyre.creator.creator import Body
 
 
-def featurized_objects_vector_to_scene(featurized_objects: np.ndarray
-                                      ) -> scene_if.Scene:
+def featurized_objects_vector_to_scene(featurized_objects: np.ndarray,
+                                      has_walls=False ) -> scene_if.Scene:
     """Convert an array of featurized objects into a Scene.
 
         Args:
@@ -34,7 +34,7 @@ def featurized_objects_vector_to_scene(featurized_objects: np.ndarray
         Returns:
             A scene_if.Scene contianing each of the featurized objects.
     """
-    task = creator.creator.TaskCreator()
+    task = creator.creator.TaskCreator(with_walls= ~has_walls)
     user_input = scene_if.UserInput(flattened_point_list=[],
                                     balls=[],
                                     polygons=[])

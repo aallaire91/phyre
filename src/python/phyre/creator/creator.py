@@ -20,31 +20,24 @@ from phyre.interface.scene import ttypes as scene_if
 from phyre.interface.task import ttypes as task_if
 
 
-class TaskCreator(object):
-    """Core object that creates tasks."""
+class SceneCreator(object):
+    """Core object that creates scenes."""
 
-    SpatialRelationship = task_if.SpatialRelationship
-    SolutionTier = constants.SolutionTier
-
-    def __init__(self):
+    def __init__(self, with_walls = True):
 
         # Create empty scene and task.
         self.scene = scene_if.Scene(bodies=[])
         self.scene.width = constants.SCENE_WIDTH
         self.scene.height = constants.SCENE_HEIGHT
-        self.task = task_if.Task(scene=self.scene,
-                                 bodyId1=-1,
-                                 bodyId2=-1,
-                                 relationships=[self.SpatialRelationship.NONE],
-                                 phantomShape=None)
-        self.set_meta(self.SolutionTier.GENERAL)
+
         self.body_list = []
 
         # Build the bounding walls.
-        self.bottom_wall = self._add_wall('bottom')
-        self.left_wall = self._add_wall('left')
-        self.top_wall = self._add_wall('top')
-        self.right_wall = self._add_wall('right')
+        if (with_walls == True):
+            self.bottom_wall = self._add_wall('bottom')
+            self.left_wall = self._add_wall('left')
+            self.top_wall = self._add_wall('top')
+            self.right_wall = self._add_wall('right')
 
     def _add_wall(self, side):
         # Set wall properties.
@@ -64,10 +57,12 @@ class TaskCreator(object):
             body.set_left(0).set_top((thickness/2.0))
         elif side == 'left':
             body.set_right((thickness/2.0)).set_bottom(0)
+            body.set_angle(90)
         elif side == 'top':
             body.set_left(0).set_bottom(self.scene.height-(thickness/2.0))
         elif side == 'right':
             body.set_left(self.scene.width-(thickness/2.0)).set_bottom(0)
+            body.set_angle(90)
         else:
             raise ValueError('Unknown wall side: %s' % side)
         return body
@@ -222,6 +217,24 @@ class TaskCreator(object):
         self.scene.bodies.append(body._thrift_body)
         self.body_list.append(body)
         return body
+
+
+class TaskCreator(SceneCreator):
+    """Core object that creates tasks."""
+
+    SpatialRelationship = task_if.SpatialRelationship
+    SolutionTier = constants.SolutionTier
+
+    def __init__(self,with_walls=True):
+        # Create empty scene and task.
+        super().__init__(with_walls)
+
+        self.task = task_if.Task(scene=self.scene,
+                                 bodyId1=-1,
+                                 bodyId2=-1,
+                                 relationships=[self.SpatialRelationship.NONE],
+                                 phantomShape=None)
+        self.set_meta(self.SolutionTier.GENERAL)
 
     def _recolor_objects(self, task_body1, task_body2):
         """Change colors so that task bodies are highlighted."""
