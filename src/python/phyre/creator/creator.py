@@ -23,7 +23,7 @@ from phyre.interface.task import ttypes as task_if
 class SceneCreator(object):
     """Core object that creates scenes."""
 
-    def __init__(self, with_walls = True):
+    def __init__(self):
 
         # Create empty scene and task.
         self.scene = scene_if.Scene(bodies=[])
@@ -33,11 +33,10 @@ class SceneCreator(object):
         self.body_list = []
 
         # Build the bounding walls.
-        if (with_walls == True):
-            self.bottom_wall = self._add_wall('bottom')
-            self.left_wall = self._add_wall('left')
-            self.top_wall = self._add_wall('top')
-            self.right_wall = self._add_wall('right')
+        self.bottom_wall = self._add_wall('bottom')
+        self.left_wall = self._add_wall('left')
+        self.top_wall = self._add_wall('top')
+        self.right_wall = self._add_wall('right')
 
     def _add_wall(self, side):
         # Set wall properties.
@@ -49,22 +48,23 @@ class SceneCreator(object):
             height = thickness
             width = constants.SCENE_WIDTH
 
-        body = self.add_bar(dynamic=False, height=height, width=width)
+        body = self.add_box(dynamic=False, height=height, width=width)
         body.set_color(
             _role_to_color_name('STATIC')).set_object_type(f'{side}-wall')
 
         if side == 'bottom':
-            body.set_left(0).set_top((thickness/2.0))
+            body.set_left(0).set_top(0)
+
         elif side == 'left':
-            body.set_right((thickness/2.0)).set_bottom(0)
-            body.set_angle(90)
+            body.set_right(0).set_bottom(0)
+
         elif side == 'top':
-            body.set_left(0).set_bottom(self.scene.height-(thickness/2.0))
+            body.set_left(0).set_bottom(self.scene.height)
         elif side == 'right':
-            body.set_left(self.scene.width-(thickness/2.0)).set_bottom(0)
-            body.set_angle(90)
+            body.set_left(self.scene.width).set_bottom(0)
         else:
             raise ValueError('Unknown wall side: %s' % side)
+        return body
         return body
 
     def add(self, string_arg, scale=0.5, **set_kwargs):
@@ -225,9 +225,9 @@ class TaskCreator(SceneCreator):
     SpatialRelationship = task_if.SpatialRelationship
     SolutionTier = constants.SolutionTier
 
-    def __init__(self,with_walls=True):
+    def __init__(self):
         # Create empty scene and task.
-        super().__init__(with_walls)
+        super().__init__()
 
         self.task = task_if.Task(scene=self.scene,
                                  bodyId1=-1,
