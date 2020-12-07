@@ -69,9 +69,10 @@ def build_user_input(points=None, rectangulars=None, balls=None):
 
 def simulate_scene(scene: scene_if.Scene,
                    steps: int = DEFAULT_MAX_STEPS,
-                   noisy_physics: scene_if.NoisyPhysics = scene_if.NoisyPhysics()) -> List[scene_if.Scene]:
+                   stride: int = 1,
+                   physics: scene_if.Physics = scene_if.Physics()) -> List[scene_if.Scene]:
     serialized_scenes = simulator_bindings.simulate_scene(
-        serialize(scene), steps,serialize(noisy_physics))
+        serialize(scene), steps,stride,serialize(physics))
     scenes = [deserialize(scene_if.Scene(), b) for b in serialized_scenes]
     return scenes
 
@@ -79,8 +80,8 @@ def simulate_scene(scene: scene_if.Scene,
 def simulate_task(task: task_if.Task,
                   steps: int = DEFAULT_MAX_STEPS,
                   stride: int = DEFAULT_STRIDE,
-                  noisy_physics: scene_if.NoisyPhysics = scene_if.NoisyPhysics()) -> task_if.TaskSimulation:
-    result = simulator_bindings.simulate_task(serialize(task), steps, stride, serialize(noisy_physics))
+                  physics: scene_if.Physics = scene_if.Physics()) -> task_if.TaskSimulation:
+    result = simulator_bindings.simulate_task(serialize(task), steps, stride, serialize(physics))
     return deserialize(task_if.TaskSimulation(), result)
 
 
@@ -128,7 +129,7 @@ def simulate_task_with_input(task,
                              steps=DEFAULT_MAX_STEPS,
                              stride=DEFAULT_STRIDE,
                              keep_space_around_bodies=True,
-                             noisy_physics=scene_if.NoisyPhysics()):
+                             physics=scene_if.Physics()):
     """Check a solution for a task and return SimulationResult.
 
     This is un-optimized version of magic_ponies that should be used for
@@ -141,7 +142,7 @@ def simulate_task_with_input(task,
     task = copy.copy(task)
     task.scene = add_user_input_to_scene(task.scene, user_input,
                                          keep_space_around_bodies)
-    return simulate_task(task, steps, stride,noisy_physics)
+    return simulate_task(task, steps, stride,physics)
 
 
 def scene_to_raster(scene: scene_if.Scene) -> np.ndarray:
@@ -200,7 +201,7 @@ def magic_ponies(task,
                  with_times=False,
                  need_images=False,
                  need_featurized_objects=False,
-                 noisy_physics=scene_if.NoisyPhysics()):
+                 physics=scene_if.Physics()):
     """Check a solution for a task and return intermidiate images.
 
     Args:
@@ -248,7 +249,7 @@ def magic_ponies(task,
                                                     keep_space_around_bodies,
                                                     steps, stride, need_images,
                                                     need_featurized_objects,
-                                                    serialize(noisy_physics)))
+                                                    serialize(physics)))
     else:
         points, rectangulars, balls = _prepare_user_input(*user_input)
         is_solved, had_occlusions, packed_images, packed_featurized_objects, number_objects, sim_time, pack_time = (
@@ -257,7 +258,7 @@ def magic_ponies(task,
                                             keep_space_around_bodies, steps,
                                             stride, need_images,
                                             need_featurized_objects,
-                                            serialize(noisy_physics)))
+                                            serialize(physics)))
 
     packed_images = np.array(packed_images, dtype=np.uint8)
 
@@ -288,7 +289,7 @@ def batched_magic_ponies(tasks,
                          with_times=False,
                          need_images=False,
                          need_featurized_objects=False,
-                         noisy_physics=scene_if.NoisyPhysics()):
+                         physics=scene_if.Physics()):
     del num_workers  # Not used.
     return tuple(
         zip(*[
@@ -300,6 +301,6 @@ def batched_magic_ponies(tasks,
                          with_times=with_times,
                          need_images=need_images,
                          need_featurized_objects=need_featurized_objects,
-                         noisy_physics=noisy_physics)
+                         physics=physics)
             for t, ui in zip(tasks, user_inputs)
         ]))

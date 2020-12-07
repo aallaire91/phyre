@@ -37,7 +37,7 @@ using ::scene::UserInput;
 using ::scene::UserInputStatus;
 using ::task::Task;
 using ::task::TaskSimulation;
-using ::scene::NoisyPhysics;
+using ::scene::Physics;
 namespace py = pybind11;
 
 namespace {
@@ -146,13 +146,13 @@ bool hadSimulationOcclusions(const TaskSimulation &simulation) {
 auto magic_ponies(const std::vector<unsigned char> &serialized_task,
                   const UserInput &user_input, bool keep_space_around_bodies,
                   int steps, int stride, bool need_images,
-                  bool need_featurized_objects,std::vector<unsigned char> noisy_physics) {
+                  bool need_featurized_objects,std::vector<unsigned char> physics) {
   SimpleTimer timer;
   Task task = deserialize<Task>(serialized_task);
 
   addUserInputToScene(user_input, keep_space_around_bodies,
                       /*allow_occlusions=*/false, &task.scene);
-  auto simulation = simulateTask(task, steps, stride,deserialize<NoisyPhysics>(noisy_physics));
+  auto simulation = simulateTask(task, steps, stride,deserialize<Physics>(physics));
 
   const double simulation_seconds = timer.GetSeconds();
   const bool isSolved = simulation.isSolution;
@@ -217,9 +217,9 @@ PYBIND11_MODULE(simulator_bindings, m) {
 
   m.def(
       "simulate_scene",
-      [](const std::vector<unsigned char> &scene, int steps,std::vector<unsigned char> noisy_physics) {
+      [](const std::vector<unsigned char> &scene, int steps,int stride,std::vector<unsigned char> physics) {
         const std::vector<Scene> scenes =
-            simulateScene(deserialize<Scene>(scene), steps,deserialize<NoisyPhysics>(noisy_physics));
+            simulateScene(deserialize<Scene>(scene), steps,stride,deserialize<Physics>(physics));
         std::vector<py::bytes> serializedScenes(scenes.size());
         for (size_t i = 0; i < scenes.size(); ++i) {
           serializedScenes[i] = serialize(scenes[i]);
@@ -273,9 +273,9 @@ PYBIND11_MODULE(simulator_bindings, m) {
 
   m.def(
       "simulate_task",
-      [](const std::vector<unsigned char> &task, int steps, int stride,std::vector<unsigned char> noisy_physics) {
+      [](const std::vector<unsigned char> &task, int steps, int stride,std::vector<unsigned char> physics) {
         const TaskSimulation results =
-            simulateTask(deserialize<Task>(task), steps, stride,deserialize<NoisyPhysics>(noisy_physics));
+            simulateTask(deserialize<Task>(task), steps, stride,deserialize<Physics>(physics));
         return serialize(results);
       },
       "Produce TaskSimulation");
@@ -288,12 +288,12 @@ PYBIND11_MODULE(simulator_bindings, m) {
          const std::vector<float> &rectangulars_vertices_flatten,
          const std::vector<float> &balls_flatten, bool keep_space_around_bodies,
          int steps, int stride, bool need_images,
-         bool need_featurized_objects,std::vector<unsigned char> noisy_physics) {
+         bool need_featurized_objects,std::vector<unsigned char> physics) {
         const UserInput user_input = buildUserInputObject(
             points, rectangulars_vertices_flatten, balls_flatten);
         return magic_ponies(serialized_task, user_input,
                             keep_space_around_bodies, steps, stride,
-                            need_images, need_featurized_objects,noisy_physics
+                            need_images, need_featurized_objects,physics
 
         );
       },
@@ -308,11 +308,11 @@ PYBIND11_MODULE(simulator_bindings, m) {
          const std::vector<unsigned char> &serialized_user_input,
 
          bool keep_space_around_bodies, int steps, int stride, bool need_images,
-         bool need_featurized_objects,std::vector<unsigned char> noisy_physics) {
+         bool need_featurized_objects,std::vector<unsigned char> physics) {
         return magic_ponies(serialized_task,
                             deserialize<UserInput>(serialized_user_input),
                             keep_space_around_bodies, steps, stride,
-                            need_images, need_featurized_objects, noisy_physics
+                            need_images, need_featurized_objects, physics
 
         );
       },

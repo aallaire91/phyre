@@ -182,7 +182,7 @@ target_link_libraries(
   PRIVATE Box2DConvexHull clip2tri-static logger)
 
 target_include_directories(simulator_lib PUBLIC ${CLIP2TRI_SOURCE_ROOT}/clipper)
-target_compile_features(simulator_lib PRIVATE cxx_auto_type)
+target_compile_features(simulator_lib PRIVATE cxx_std_17)
 
 # # Threading benchmark binary.
 # add_executable(benchmark_box2d src/simulator/benchmark_box2d)
@@ -197,7 +197,7 @@ target_compile_features(simulator_lib PRIVATE cxx_auto_type)
 # Pybind11 binding.
 pybind11_add_module(simulator_bindings src/simulator/simulator_bindings)
 target_link_libraries(simulator_bindings PRIVATE thrift_task simulator_lib)
-target_compile_features(simulator_bindings PRIVATE cxx_std_14)
+target_compile_features(simulator_bindings PRIVATE cxx_std_17)
 
 
 ##########################################
