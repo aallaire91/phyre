@@ -197,7 +197,7 @@ target_compile_features(simulator_lib PRIVATE cxx_std_17)
 # Pybind11 binding.
 pybind11_add_module(simulator_bindings src/simulator/simulator_bindings)
 target_link_libraries(simulator_bindings PRIVATE thrift_task simulator_lib)
-target_compile_features(simulator_bindings PRIVATE cxx_std_17)
+target_compile_features(simulator_bindings PRIVATE cxx_std_14)
 
 
 ##########################################
