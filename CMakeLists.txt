@@ -182,7 +182,7 @@ target_link_libraries(
   PRIVATE Box2DConvexHull clip2tri-static logger)
 
 target_include_directories(simulator_lib PUBLIC ${CLIP2TRI_SOURCE_ROOT}/clipper)
-target_compile_features(simulator_lib PRIVATE cxx_std_17)
+target_compile_features(simulator_lib PRIVATE cxx_auto_type)
 
 # # Threading benchmark binary.
 # add_executable(benchmark_box2d src/simulator/benchmark_box2d)

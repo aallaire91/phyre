@@ -28,7 +28,7 @@ DEFAULT_MAX_STEPS = simulator_bindings.DEFAULT_MAX_STEPS
 STEPS_FOR_SOLUTION = simulator_bindings.STEPS_FOR_SOLUTION
 DEFAULT_STRIDE = simulator_bindings.FPS
 OBJECT_FEATURE_SIZE = simulator_bindings.OBJECT_FEATURE_SIZE
-
+PIXELS_IN_METER = simulator_bindings.PIXELS_IN_METER
 FACTORY = TBinaryProtocol.TBinaryProtocolAcceleratedFactory()
 
 
@@ -66,6 +66,13 @@ def build_user_input(points=None, rectangulars=None, balls=None):
                                         radius=ball[2]))
     return user_input
 
+def convert_scenes_to_task_simulation(task: task_if.Task,
+                                      scenes: List[scene_if.Scene],
+                                      physics: scene_if.Physics = scene_if.Physics(),
+                                      px_threshold: float = 0.1):
+    threshold = px_threshold/PIXELS_IN_METER
+    result = simulator_bindings.convert_scenes_to_task_simulation(serialize(task),serialize(scenes),serialize(physics),threshold)
+    return deserialize(task_if.TaskSimulation(), result)
 
 def simulate_scene(scene: scene_if.Scene,
                    steps: int = DEFAULT_MAX_STEPS,

@@ -16,8 +16,9 @@
 
 #include "gen-cpp/task_types.h"
 #include "thrift_box2d_conversion.h"
-
+// One tenth of a pixel.
+constexpr float kBallTouchingThreshold = 0.1 / PIXELS_IN_METER;
 bool isTaskInSolvedState(const ::task::Task& task,
-                         const b2WorldWithData& world);
+                         const b2WorldWithData& world,float threshold=kBallTouchingThreshold);
 
 #endif  // TASK_VALIDATION_H

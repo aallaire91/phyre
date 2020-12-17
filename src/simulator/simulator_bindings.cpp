@@ -214,6 +214,8 @@ PYBIND11_MODULE(simulator_bindings, m) {
   m.attr("OBJECT_FEATURE_SIZE") = kObjectFeatureSize;
   m.attr("DEFAULT_MAX_STEPS") = kMaxSteps;
   m.attr("STEPS_FOR_SOLUTION") = kStepsForSolution;
+  m.attr("STEPS_FOR_SOLUTION") = kStepsForSolution;
+  m.attr("PIXELS_IN_METER") = PIXELS_IN_METER;
 
   m.def(
       "simulate_scene",
@@ -228,7 +230,17 @@ PYBIND11_MODULE(simulator_bindings, m) {
       },
       "Get per-frame results of scene simulation");
 
-
+  m.def(
+    "convert_scenes_to_task_simulation",
+    [](const std::vector<unsigned char> &task,const std::vector<std::vector<unsigned char>> scenes, std::vector<unsigned char> physics, float threshold) {
+        std::vector<Scene> deserializedScenes(scenes.size());
+        for (size_t i = 0; i < scenes.size(); ++i) {
+            deserializedScenes[i] = deserialize<Scene>(scenes[i]);
+        }
+        TaskSimulation results =convertScenesToTaskSimulation(deserialize<Task>(task), deserializedScenes, deserialize<Physics>(physics),threshold);
+        return serialize(results);
+    },
+    "get task simulation from scenes");
   m.def(
       "add_user_input_to_scene",
       [](const std::vector<unsigned char> &scene_serialized,

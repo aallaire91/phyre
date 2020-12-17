@@ -69,8 +69,8 @@ def main(src_folder=str(
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser()
-    # parser.add_argument('--s','src_folder',default=str(phyre.settings.TASK_SCRIPTS_DIR), help='Folder with "taskXXX.py" files')
-    # parser.add_argument('--t','target_folder',default=str(phyre.settings.TASK_DIR))
+    parser.add_argument('-s','--src_folder',default=str(phyre.settings.TASK_SCRIPTS_DIR), help='Folder with "taskXXX.py" files')
+    parser.add_argument('-t','--target_folder',default=str(phyre.settings.TASK_DIR))
     parser.add_argument(
         '--save-single-pickle',default=True,
         action='store_true',

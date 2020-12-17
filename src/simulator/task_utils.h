@@ -18,7 +18,7 @@
 
 #include "gen-cpp/scene_types.h"
 #include "gen-cpp/task_types.h"
-
+#include "thrift_box2d_conversion.h"
 constexpr unsigned kObjectFeatureSize = 17;
 constexpr unsigned kNumColors = 6;
 constexpr unsigned kNumShapes = 4;
@@ -39,6 +39,8 @@ std::vector<::scene::Scene> simulateScene(const ::scene::Scene& scene,
                                           const int num_steps,::scene::Physics physics=::scene::Physics());
 std::vector<::scene::Scene> simulateScene(const ::scene::Scene& scene,
                                           const int num_steps,const int stride,::scene::Physics physics=::scene::Physics());
+
+::task::TaskSimulation convertScenesToTaskSimulation(const ::task::Task &task, std::vector<::scene::Scene> scenes,::scene::Physics physics=::scene::Physics(),float threshold =0.1 / PIXELS_IN_METER);
 
 // Runs simulation for at most num_steps. The sumlation is stopped earlier if
 // the task is in the solved state for at least kStepsForSolution steps.

@@ -39,6 +39,7 @@ double truncate(double x,double min,double max) {
     return x;
 }
 
+
 // Runs simulation for the scene. If task is not nullptr, is-task-solved checks
 // are performed.
 ::task::TaskSimulation simulateTask(const ::scene::Scene &scene,
@@ -144,4 +145,64 @@ std::vector<::scene::Scene> simulateScene(const ::scene::Scene &scene,
                                     const int num_steps, const int stride,::scene::Physics physics) {
   const SimulationRequest request{num_steps, stride};
   return simulateTask(task.scene, request, &task,physics);
+}
+
+::task::TaskSimulation convertScenesToTaskSimulation(const ::task::Task &task, std::vector<::scene::Scene> scenes,::scene::Physics physics,float threshold ) {
+    unsigned int continuousSolvedCount = 0;
+    std::vector<bool> solveStateList;
+    bool solved = false;
+    int step = 0;
+    for (int step = 0; step < scenes.size(); step ++) {
+        std::unique_ptr<b2WorldWithData> world = convertSceneToBox2dWorld_with_bounding_boxes(scenes[step],physics);
+        // For different relations number of steps the condition should hold varies.
+        // For NOT_TOUCHING relation one of three should be true:
+        //   1. Objects are touching at the beginning and then not touching for
+        //   kStepsForSolution steps.
+        //   2. Objects are not touching at the beginning, touching at some point of
+        //   simulation and then not touching for kStepsForSolution steps.
+        //   3. Objects are not touching whole sumulation.
+        // For TOUCHING_BRIEFLY a single touching is allowed.
+        // For all other relations the condition must hold for kStepsForSolution
+        // consequent steps.
+        bool lookingForSolution =
+            (!isTaskInSolvedState(task, *world,threshold) ||
+                task.relationships.size() != 1 ||
+                task.relationships[0] != ::task::SpatialRelationship::NOT_TOUCHING);
+        const bool allowInstantSolution =
+            (task.relationships.size() == 1 &&
+                task.relationships[0] == ::task::SpatialRelationship::TOUCHING_BRIEFLY);
+
+
+        solveStateList.push_back(isTaskInSolvedState(task, *world,threshold));
+        if (solveStateList.back()) {
+            continuousSolvedCount++;
+            if (lookingForSolution) {
+                if (continuousSolvedCount >= kStepsForSolution ||
+                    allowInstantSolution) {
+                    solved = true;
+                    break;
+                }
+            }
+        } else {
+            lookingForSolution = true;  // Task passed through non-solved state.
+            continuousSolvedCount = 0;
+        }
+
+
+
+        if (!lookingForSolution && continuousSolvedCount == solveStateList.size()) {
+            // See condition 3) for NOT_TOUCHING relation above.
+            solved = true;
+        }
+
+
+    }
+    ::task::TaskSimulation taskSimulation;
+    taskSimulation.__set_sceneList(scenes);
+    taskSimulation.__set_stepsSimulated(step);
+    taskSimulation.__set_solvedStateList(solveStateList);
+    taskSimulation.__set_isSolution(solved);
+
+
+    return taskSimulation;
 }

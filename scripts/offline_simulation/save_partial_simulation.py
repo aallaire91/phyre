@@ -17,12 +17,52 @@ import multiprocessing
 import os
 import signal
 import sys
-
+import phyre.interface.scene.ttypes as scene_if
 import joblib
 import numpy as np
 
 import phyre
 
+def sample_gaussian(mu,sigma,n = 1,rng=np.random.default_rng()):
+    return rng.normal(mu,sigma,n)
+
+# skewed physics parameters, no noise
+def inaccurate_physics():
+    physics = scene_if.Physics()
+    physics.friction = 0.1
+    physics.restitution = 0.5
+    physics.density = 0.5
+    physics.gravity = -5
+    return physics
+
+# default phyre physics
+def default_physics():
+    # all noise params set to 0, and physics params set to default values
+    physics = scene_if.Physics()
+    return physics
+
+def inaccurate_noisy_physics(rng=np.random.default_rng()):
+    physics = scene_if.Physics()
+    physics.friction = sample_gaussian(0.1,0.05,rng=rng)
+    physics.restitution = sample_gaussian(1,0.05,rng=rng)
+    physics.density = sample_gaussian(0.5,0.05,rng=rng)
+    physics.angularDamping = sample_gaussian(0.1,0.01,rng=rng)
+    physics.linearDamping = sample_gaussian(0.1,0.01,rng=rng)
+    physics.gravity = sample_gaussian(-9.8,0.05,rng=rng)
+
+    return physics
+
+
+# default phrye physics with added noise
+def default_noisy_physics(rng=np.random.default_rng()):
+    physics = scene_if.Physics()
+    physics.friction = sample_gaussian(physics.friction,0.1,rng=rng)
+    physics.angularDamping = sample_gaussian(physics.angularDamping,0.05,rng=rng)
+    physics.linearDamping = sample_gaussian(physics.linearDamping,0.05,rng=rng)
+    physics.density = sample_gaussian(physics.density,0.1,rng=rng)
+    physics.restitution = sample_gaussian(physics.restitution,0.1,rng=rng)
+    physics.gravity = sample_gaussian(physics.gravity,0.1,rng=rng)
+    return physics
 
 def _worker(tier, task_id, num_jobs, num_actions, job_id):
     action_path = (
@@ -33,7 +73,7 @@ def _worker(tier, task_id, num_jobs, num_actions, job_id):
 
     actions = np.array_split(actions, num_jobs)[job_id]
     statuses = [
-        int(sim.simulate_action(0, action, need_images=False).status)
+        int(sim.simulate_action(0, action, need_images=False,physics = default_noisy_physics()).status)
         for action in actions
     ]
     return statuses

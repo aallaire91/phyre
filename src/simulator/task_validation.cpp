@@ -20,8 +20,7 @@
 
 namespace {
 
-// One tenth of a pixel.
-constexpr float kBallTouchingThreshold = 0.1 / PIXELS_IN_METER;
+
 
 const Box2dData* getBodyUserData(const b2Body& body) {
   if (body.GetUserData() == nullptr) {
@@ -342,7 +341,7 @@ bool isTwoBallTouchingCase(
 }  // namespace
 
 bool isTaskInSolvedState(const ::task::Task& task,
-                         const b2WorldWithData& world) {
+                         const b2WorldWithData& world, float threshold) {
   checkTaskValidity(task);
   const b2Body* body1 = nullptr;
   const b2Body* body2 = nullptr;
@@ -382,7 +381,7 @@ bool isTaskInSolvedState(const ::task::Task& task,
     const auto r2 = body2->GetFixtureList()->GetShape()->m_radius;
     const float distance = sqrt(
         geometry::squareDistance(body1->GetPosition(), body2->GetPosition()));
-    return distance < r1 + r2 + kBallTouchingThreshold;
+    return distance < r1 + r2 + threshold;
   }
 
   ::scene::Shape scaledPhantomShape;
